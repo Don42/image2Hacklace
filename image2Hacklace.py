@@ -10,6 +10,7 @@
 
 import Image
 import sys
+import argparse
 
 
 def convertImage(pic):
@@ -23,9 +24,31 @@ def convertImage(pic):
     return outputstring
 
 
+def buildModusByte(speed=0x0, pause=0x0, twoWay=False):
+    modusByte = 0b1000
+
+    modusByte |= (speed & 0b111)
+    modusByte |= ((pause << 4) & 0b1110000)
+
+    if(twoWay):
+        modusByte |= 0b10000000
+    return modusByte
+
+
 def main(argv):
-    outputstring = "$09,$FF,"
-    for file in argv:
+    parser = argparse.ArgumentParser(description='Convert pictures to ' +
+                                     'Hacklace animation')
+    parser.add_argument('filenames', nargs='+', help='paths to input pictures')
+    parser.add_argument('-s', '--speed', help='set the speed of the animation' +
+                        '(0-7)',
+                        dest='speed', default=4, type=int)
+    parser.add_argument('-p', '--pause', help='set the pause at the end of one ' +
+                        'cycle', dest='pause', default=0, type=int)
+    args = parser.parse_args()
+
+    modusByte = buildModusByte(args.speed, args.pause)
+    outputstring = "$%02X,$FF," % modusByte
+    for file in args.filenames:
         outputstring += convertImage(Image.open(file).resize((5, 7)).load())
 
     print outputstring + "$FF,"
