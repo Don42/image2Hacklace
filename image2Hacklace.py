@@ -11,6 +11,7 @@
 import Image
 import sys
 import argparse
+from os.path import basename, splitext
 
 
 def convertImage(pic):
@@ -78,6 +79,11 @@ def main(argv):
     parser.add_argument('-o', '--output', default='config', dest='output',
                         help="""Sets the output format. Possible options are
                         'config' and 'source'""")
+
+    parser.add_argument('-f', '--file', help="""File to save output to. This
+                         works with both output modes""", dest='file',
+                        default='-')
+
     args = parser.parse_args()
 
     #Convert the images to animationframes
@@ -91,11 +97,19 @@ def main(argv):
         #Create the Modusbyte and format the animation for the config file
         modusByte = buildModusByte(args.speed, args.pause, args.scroll_mode)
         outputString = formatConfigOutput(animation, modusByte)
+    elif(args.output == 'source' and args.file != '-'):
+        #Create format the animation to output to a C header file
+        outputString = formatSourceOutput(animation, splitext(
+            basename(args.file))[0])
     elif(args.output == 'source'):
         #Create format the animation to output to a C header file
         outputString = formatSourceOutput(animation)
 
-    print outputString
+    if(args.file == '-'):
+        print outputString
+    else:
+        with open(args.file, 'w') as file:
+            file.write(outputString)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
