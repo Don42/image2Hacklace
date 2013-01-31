@@ -50,9 +50,9 @@ def formatSourceOutput(animation, filename='animation'):
     frameNb = 0
     for frame in animation:
         for column in frame:
-            outputString += "$%02X," % column
+            outputString += "0x%02X," % column
         frameNb += 1
-        outputString += "\t#Frame %d\n" % frameNb
+        outputString += "\t//Frame %d\n" % frameNb
     outputString += 'END_OF_DATA\n};'
     return outputString
 
