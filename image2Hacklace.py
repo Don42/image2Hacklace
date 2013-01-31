@@ -14,14 +14,14 @@ import argparse
 
 
 def convertImage(pic):
-    outputstring = ""
+    output = []
     for n in range(5):
         column = 0x0
         for m in range(7):
             if(pic[(n, m)] <= 127):
                 column += 1 << m
-        outputstring += "$%02X," % column
-    return outputstring
+        output.append(column)
+    return output
 
 
 def buildModusByte(speed=0x0, pause=0x0, scroll_dir='oneway'):
@@ -33,6 +33,15 @@ def buildModusByte(speed=0x0, pause=0x0, scroll_dir='oneway'):
     if(scroll_dir == 'twoway'):
         modusByte |= 0b10000000
     return modusByte
+
+
+def formatConfigOutput(animation, modusByte):
+    """Function to output data in the config file format"""
+    outputstring = "$%02X,$FF," % modusByte
+    for frame in animation:
+        for column in frame:
+            outputstring += "$%02X," % column
+    return outputstring + "$FF,"
 
 
 def main(argv):
@@ -51,12 +60,16 @@ def main(argv):
                         dest='scroll_mode', default='oneway')
     args = parser.parse_args()
 
-    modusByte = buildModusByte(args.speed, args.pause, args.scroll_mode)
-    outputstring = "$%02X,$FF," % modusByte
+    #Convert the images to animationframes
+    animation = []
     for file in args.filenames:
-        outputstring += convertImage(Image.open(file).resize((5, 7)).load())
+        animation.append(convertImage(Image.open(file).resize((5, 7)).load()))
 
-    print outputstring + "$FF,"
+    #Create the Modusbyte and format the animation for the config file
+    modusByte = buildModusByte(args.speed, args.pause, args.scroll_mode)
+    outputstring = formatConfigOutput(animation, modusByte)
+
+    print outputstring
 
 if __name__ == "__main__":
     main(sys.argv[1:])
