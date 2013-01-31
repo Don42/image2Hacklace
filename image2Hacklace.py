@@ -36,11 +36,12 @@ def buildModusByte(speed=0x0, pause=0x0, scroll_dir='oneway'):
 
 
 def main(argv):
+    #Create Parser and parse Arguments
     parser = argparse.ArgumentParser(description="""Convert pictures to
                                      a Hacklace animation""")
     parser.add_argument('filenames', nargs='+', help='paths to input pictures')
-    parser.add_argument('-s', '--speed', help='set the speed of the animation' +
-                        '(0-7)',
+    parser.add_argument('-s', '--speed', help="""set the speed of the animation
+                        (0-7)""",
                         dest='speed', default=4, type=int)
     parser.add_argument('-p', '--pause', help="""set the pause at the end of
                         a cycle""", dest='pause', default=0, type=int)
