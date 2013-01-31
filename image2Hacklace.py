@@ -24,13 +24,13 @@ def convertImage(pic):
     return outputstring
 
 
-def buildModusByte(speed=0x0, pause=0x0, twoWay=False):
+def buildModusByte(speed=0x0, pause=0x0, scroll_dir='oneway'):
     modusByte = 0b1000
 
     modusByte |= (speed & 0b111)
     modusByte |= ((pause << 4) & 0b1110000)
 
-    if(twoWay):
+    if(scroll_dir == 'twoway'):
         modusByte |= 0b10000000
     return modusByte
 
@@ -44,9 +44,13 @@ def main(argv):
                         dest='speed', default=4, type=int)
     parser.add_argument('-p', '--pause', help="""set the pause at the end of
                         a cycle""", dest='pause', default=0, type=int)
+    parser.add_argument('-m', '--scroll-mode', help="""choose if the animation
+                        should scroll forward or forward and backwards.
+                        Possible options are 'oneway' and 'twoway'""",
+                        dest='scroll_mode', default='oneway')
     args = parser.parse_args()
 
-    modusByte = buildModusByte(args.speed, args.pause)
+    modusByte = buildModusByte(args.speed, args.pause, args.scroll_mode)
     outputstring = "$%02X,$FF," % modusByte
     for file in args.filenames:
         outputstring += convertImage(Image.open(file).resize((5, 7)).load())
