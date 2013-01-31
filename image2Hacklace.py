@@ -37,27 +37,47 @@ def buildModusByte(speed=0x0, pause=0x0, scroll_dir='oneway'):
 
 def formatConfigOutput(animation, modusByte):
     """Function to output data in the config file format"""
-    outputstring = "$%02X,$FF," % modusByte
+    outputString = "$%02X,$FF," % modusByte
     for frame in animation:
         for column in frame:
-            outputstring += "$%02X," % column
-    return outputstring + "$FF,"
+            outputString += "$%02X," % column
+    return outputString + "$FF,"
+
+
+def formatSourceOutput(animation, filename='animation'):
+    """Function to output data in the source header file format"""
+    outputString = 'const unsigned char %s[] PROGMEM = {\n' % filename
+    frameNb = 0
+    for frame in animation:
+        for column in frame:
+            outputString += "$%02X," % column
+        frameNb += 1
+        outputString += "\t#Frame %d\n" % frameNb
+    outputString += 'END_OF_DATA\n};'
+    return outputString
 
 
 def main(argv):
     #Create Parser and parse Arguments
     parser = argparse.ArgumentParser(description="""Convert pictures to
                                      a Hacklace animation""")
+
     parser.add_argument('filenames', nargs='+', help='paths to input pictures')
+
     parser.add_argument('-s', '--speed', help="""set the speed of the animation
-                        (0-7)""",
-                        dest='speed', default=4, type=int)
+                        (0-7)""", dest='speed', default=4, type=int)
+
     parser.add_argument('-p', '--pause', help="""set the pause at the end of
                         a cycle""", dest='pause', default=0, type=int)
+
     parser.add_argument('-m', '--scroll-mode', help="""choose if the animation
                         should scroll forward or forward and backwards.
                         Possible options are 'oneway' and 'twoway'""",
                         dest='scroll_mode', default='oneway')
+
+    parser.add_argument('-o', '--output', default='config', dest='output',
+                        help="""Sets the output format. Possible options are
+                        'config' and 'source'""")
     args = parser.parse_args()
 
     #Convert the images to animationframes
@@ -65,11 +85,17 @@ def main(argv):
     for file in args.filenames:
         animation.append(convertImage(Image.open(file).resize((5, 7)).load()))
 
-    #Create the Modusbyte and format the animation for the config file
-    modusByte = buildModusByte(args.speed, args.pause, args.scroll_mode)
-    outputstring = formatConfigOutput(animation, modusByte)
+    outputString = ""
 
-    print outputstring
+    if(args.output == 'config'):
+        #Create the Modusbyte and format the animation for the config file
+        modusByte = buildModusByte(args.speed, args.pause, args.scroll_mode)
+        outputString = formatConfigOutput(animation, modusByte)
+    elif(args.output == 'source'):
+        #Create format the animation to output to a C header file
+        outputString = formatSourceOutput(animation)
+
+    print outputString
 
 if __name__ == "__main__":
     main(sys.argv[1:])
